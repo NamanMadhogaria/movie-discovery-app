@@ -45,8 +45,8 @@ export class MovieProvider {
     try { const result = await request<TmdbPage>('/search/movie', { query, page, include_adult: 'false' }); return { data: result.results.map(mapMovie), pagination: { page: result.page, totalPages: result.total_pages, totalResults: result.total_results, hasNextPage: result.page < result.total_pages } }; } catch (error) { if (config.demoFallback) { console.warn('[movie-provider] Using demo catalog because TMDB is unavailable.'); return demoPage(demoMovies.filter(m => m.title.toLowerCase().includes(query.toLowerCase())), page); } throw error; }
   }
   async trending(): Promise<PageResult<Movie>> {
-    if (!config.tmdbApiKey) return demoPage(demoMovies.slice(0, 5), 1);
-    try { const result = await request<TmdbPage>('/trending/movie/week', {}); return { data: result.results.map(mapMovie), pagination: { page: 1, totalPages: 1, totalResults: result.results.length, hasNextPage: false } }; } catch (error) { if (config.demoFallback) { console.warn('[movie-provider] Using demo catalog because TMDB is unavailable.'); return demoPage(demoMovies.slice(0, 5), 1); } throw error; }
+    if (!config.tmdbApiKey) return demoPage(demoMovies.slice(0, 8), 1);
+    try { const result = await request<TmdbPage>('/trending/movie/week', {}); return { data: result.results.map(mapMovie), pagination: { page: 1, totalPages: 1, totalResults: result.results.length, hasNextPage: false } }; } catch (error) { if (config.demoFallback) { console.warn('[movie-provider] Using demo catalog because TMDB is unavailable.'); return demoPage(demoMovies.slice(0, 8), 1); } throw error; }
   }
   async details(id: number): Promise<Movie> {
     if (!config.tmdbApiKey) { const found = demoMovies.find(m => m.id === id); if (!found) throw new MovieProviderError('Movie not found'); return found; }
