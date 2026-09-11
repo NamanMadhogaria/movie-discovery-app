@@ -13,5 +13,10 @@ export type Movie = {
 
 export type PageResult<T> = {
   data: T[];
-  pagination: { page: number; totalPages: number; totalResults: number; hasNextPage: boolean };
+  pagination: {
+    page: number;
+    totalPages: number;
+    totalResults: number;
+    hasNextPage: boolean;
+  };
 };

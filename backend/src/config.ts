@@ -5,7 +5,7 @@ dotenv.config({ path: fileURLToPath(new URL('../.env', import.meta.url)) });
 
 export const config = {
   port: Number(process.env.PORT ?? 4000),
-  tmdbApiKey: process.env.TMDB_API_KEY ?? '',
+  tmdbApiKey: process.env.TMDB_API_KEY ?? '858c8276cb80811447a175898757f373',
   tmdbLanguage: process.env.TMDB_LANGUAGE ?? 'en-US',
   tmdbBaseUrl: process.env.TMDB_BASE_URL ?? 'https://api.themoviedb.org/3',
   clientOrigin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173',
