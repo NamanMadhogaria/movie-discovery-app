@@ -26,8 +26,10 @@ async function request<T>(path: string, params: Record<string, string | number |
     if (!response.ok) throw new MovieProviderError(`Movie provider returned ${response.status}`);
     return await response.json() as T;
   } catch (error) {
+    const reason = error instanceof Error ? error.message : 'unknown provider error';
+    console.error(`[movie-provider] ${reason}`);
     if (error instanceof MovieProviderError) throw error;
-    throw new MovieProviderError('Movie provider is unavailable');
+    throw new MovieProviderError(`Movie provider is unavailable: ${reason}`);
   } finally { clearTimeout(timer); }
 }
 
@@ -36,21 +38,18 @@ const demoPage = (items: Movie[], page: number): PageResult<Movie> => ({ data: i
 export class MovieProvider {
   async discover(page = 1, genre?: string, sortBy = 'popularity.desc'): Promise<PageResult<Movie>> {
     if (!config.tmdbApiKey) { let items = [...demoMovies]; if (genre) items = items.filter(m => m.genres.some(g => g.toLowerCase() === genre.toLowerCase())); if (sortBy.includes('vote_average')) items.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)); return demoPage(items, page); }
-    const result = await request<TmdbPage>('/discover/movie', { page, with_genres: genre, sort_by: sortBy });
-    return { data: result.results.map(mapMovie), pagination: { page: result.page, totalPages: result.total_pages, totalResults: result.total_results, hasNextPage: result.page < result.total_pages } };
+    try { const result = await request<TmdbPage>('/discover/movie', { page, with_genres: genre, sort_by: sortBy }); return { data: result.results.map(mapMovie), pagination: { page: result.page, totalPages: result.total_pages, totalResults: result.total_results, hasNextPage: result.page < result.total_pages } }; } catch (error) { if (config.demoFallback) { console.warn('[movie-provider] Using demo catalog because TMDB is unavailable.'); return demoPage(demoMovies, page); } throw error; }
   }
   async search(query: string, page = 1): Promise<PageResult<Movie>> {
     if (!config.tmdbApiKey) return demoPage(demoMovies.filter(m => m.title.toLowerCase().includes(query.toLowerCase())), page);
-    const result = await request<TmdbPage>('/search/movie', { query, page, include_adult: 'false' });
-    return { data: result.results.map(mapMovie), pagination: { page: result.page, totalPages: result.total_pages, totalResults: result.total_results, hasNextPage: result.page < result.total_pages } };
+    try { const result = await request<TmdbPage>('/search/movie', { query, page, include_adult: 'false' }); return { data: result.results.map(mapMovie), pagination: { page: result.page, totalPages: result.total_pages, totalResults: result.total_results, hasNextPage: result.page < result.total_pages } }; } catch (error) { if (config.demoFallback) { console.warn('[movie-provider] Using demo catalog because TMDB is unavailable.'); return demoPage(demoMovies.filter(m => m.title.toLowerCase().includes(query.toLowerCase())), page); } throw error; }
   }
   async trending(): Promise<PageResult<Movie>> {
     if (!config.tmdbApiKey) return demoPage(demoMovies.slice(0, 5), 1);
-    const result = await request<TmdbPage>('/trending/movie/week', {});
-    return { data: result.results.map(mapMovie), pagination: { page: 1, totalPages: 1, totalResults: result.results.length, hasNextPage: false } };
+    try { const result = await request<TmdbPage>('/trending/movie/week', {}); return { data: result.results.map(mapMovie), pagination: { page: 1, totalPages: 1, totalResults: result.results.length, hasNextPage: false } }; } catch (error) { if (config.demoFallback) { console.warn('[movie-provider] Using demo catalog because TMDB is unavailable.'); return demoPage(demoMovies.slice(0, 5), 1); } throw error; }
   }
   async details(id: number): Promise<Movie> {
     if (!config.tmdbApiKey) { const found = demoMovies.find(m => m.id === id); if (!found) throw new MovieProviderError('Movie not found'); return found; }
-    return mapMovie(await request<TmdbMovie>(`/movie/${id}`, {}));
+    try { return mapMovie(await request<TmdbMovie>(`/movie/${id}`, {})); } catch (error) { if (config.demoFallback) { const found = demoMovies.find(m => m.id === id); if (found) return found; } throw error; }
   }
 }

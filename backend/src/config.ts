@@ -1,4 +1,7 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'node:url';
+
+dotenv.config({ path: fileURLToPath(new URL('../.env', import.meta.url)) });
 
 export const config = {
   port: Number(process.env.PORT ?? 4000),
@@ -8,4 +11,5 @@ export const config = {
   clientOrigin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173',
   cacheTtlMs: Number(process.env.MOVIE_CACHE_TTL_MS ?? 300000),
   timeoutMs: Number(process.env.REQUEST_TIMEOUT_MS ?? 8000),
+  demoFallback: process.env.DEMO_FALLBACK !== 'false',
 };
